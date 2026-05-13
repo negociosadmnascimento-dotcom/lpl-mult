@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Edit2, Package, Building2, User, Calendar, FileText, CheckCircle2, Clock, Trash2, Save, X } from "lucide-react";
+import { ArrowLeft, Edit2, Package, Building2, User, Calendar, FileText, CheckCircle2, Clock, Trash2, Save, X, Minus, Plus } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
@@ -18,6 +18,8 @@ export default function PedidoDetailPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [editingDataEntrega, setEditingDataEntrega] = useState<string | null>(null);
   const [newDate, setNewDate] = useState("");
+  const [editingQtd, setEditingQtd] = useState<string | null>(null);
+  const [newQtd, setNewQtd] = useState(1);
 
   useEffect(() => {
     if (id) loadPedido();
@@ -65,6 +67,33 @@ export default function PedidoDetailPage() {
     }
     setUpdating(null);
     setEditingDataEntrega(null);
+  }
+
+  async function removeBrinde(pbId: string) {
+    if (!confirm("Remover este brinde do pedido?")) return;
+    setUpdating(pbId);
+    const { error } = await supabase.from("pedido_brindes").delete().eq("id", pbId);
+    if (error) {
+      toast.error("Erro ao remover brinde");
+    } else {
+      toast.success("Brinde removido do pedido");
+      loadPedido();
+    }
+    setUpdating(null);
+  }
+
+  async function updateQuantidade(pbId: string, qtd: number) {
+    if (qtd < 1) return;
+    setUpdating(pbId);
+    const { error } = await supabase.from("pedido_brindes").update({ quantidade: qtd }).eq("id", pbId);
+    if (error) {
+      toast.error("Erro ao atualizar quantidade");
+    } else {
+      toast.success("Quantidade atualizada");
+      loadPedido();
+    }
+    setUpdating(null);
+    setEditingQtd(null);
   }
 
   async function deletePedido() {
@@ -213,7 +242,7 @@ export default function PedidoDetailPage() {
                 <thead>
                   <tr className="bg-gray-50 dark:bg-white/3">
                     {["Brinde", "Categoria", "Quantidade", "Data de Entrega", "Status", "Ações"].map((h) => (
-                      <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         {h}
                       </th>
                     ))}
@@ -225,7 +254,7 @@ export default function PedidoDetailPage() {
                     const isEditing = editingDataEntrega === item.id;
                     return (
                       <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-white/3 transition-colors">
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 bg-brand-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
                               <Package size={14} className="text-brand-blue" />
@@ -233,17 +262,62 @@ export default function PedidoDetailPage() {
                             <span className="text-sm font-medium text-gray-900 dark:text-white">{b?.nome || "-"}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           {b?.categoria && (
                             <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400">
                               {b.categoria}
                             </span>
                           )}
                         </td>
-                        <td className="px-5 py-4">
-                          <span className="text-sm font-bold text-brand-blue">{item.quantidade}</span>
+                        <td className="px-4 py-4">
+                          {editingQtd === item.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setNewQtd((v) => Math.max(1, v - 1))}
+                                className="p-1 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                              >
+                                <Minus size={11} />
+                              </button>
+                              <input
+                                type="number"
+                                min={1}
+                                value={newQtd}
+                                onChange={(e) => setNewQtd(Math.max(1, Number(e.target.value)))}
+                                className="w-14 text-center px-2 py-1 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 text-gray-900 dark:text-gray-100"
+                              />
+                              <button
+                                onClick={() => setNewQtd((v) => v + 1)}
+                                className="p-1 rounded-lg bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                              >
+                                <Plus size={11} />
+                              </button>
+                              <button
+                                onClick={() => updateQuantidade(item.id, newQtd)}
+                                disabled={!!updating}
+                                className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-200 transition-colors"
+                              >
+                                {updating === item.id ? <div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" /> : <Save size={11} />}
+                              </button>
+                              <button
+                                onClick={() => setEditingQtd(null)}
+                                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                              >
+                                <X size={11} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-brand-blue">{item.quantidade}</span>
+                              <button
+                                onClick={() => { setEditingQtd(item.id); setNewQtd(item.quantidade); }}
+                                className="p-1 rounded text-gray-300 hover:text-brand-blue transition-colors"
+                              >
+                                <Edit2 size={11} />
+                              </button>
+                            </div>
+                          )}
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           {isEditing ? (
                             <div className="flex items-center gap-2">
                               <input
@@ -287,7 +361,7 @@ export default function PedidoDetailPage() {
                             </div>
                           )}
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           {item.status_brinde === "entregue" ? (
                             <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-medium">
                               <CheckCircle2 size={12} /> Entregue
@@ -298,18 +372,30 @@ export default function PedidoDetailPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-5 py-4">
-                          {item.status_brinde === "pendente" && (
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            {item.status_brinde === "pendente" && (
+                              <button
+                                onClick={() => {
+                                  setEditingDataEntrega(item.id);
+                                  setNewDate(new Date().toISOString().split("T")[0]);
+                                }}
+                                className="text-xs text-brand-blue hover:text-brand-blue-dark font-medium transition-colors"
+                              >
+                                Marcar entregue
+                              </button>
+                            )}
                             <button
-                              onClick={() => {
-                                setEditingDataEntrega(item.id);
-                                setNewDate(new Date().toISOString().split("T")[0]);
-                              }}
-                              className="text-xs text-brand-blue hover:text-brand-blue-dark font-medium transition-colors"
+                              onClick={() => removeBrinde(item.id)}
+                              disabled={!!updating}
+                              className="p-1.5 rounded-lg text-gray-300 hover:text-brand-red hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              title="Remover brinde do pedido"
                             >
-                              Marcar entregue
+                              {updating === item.id
+                                ? <div className="w-3 h-3 border border-current/30 border-t-current rounded-full animate-spin" />
+                                : <Trash2 size={13} />}
                             </button>
-                          )}
+                          </div>
                         </td>
                       </tr>
                     );
