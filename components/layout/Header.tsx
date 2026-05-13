@@ -15,7 +15,7 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
-  const { unreadCount } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { sidebarOpen, toggleSidebar } = useSidebar();
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -74,7 +74,13 @@ export function Header({ title, subtitle }: HeaderProps) {
 
       {/* Notification Panel */}
       {notifOpen && (
-        <NotificationPanel onClose={() => setNotifOpen(false)} />
+        <NotificationPanel
+          onClose={() => setNotifOpen(false)}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          markAsRead={markAsRead}
+          markAllAsRead={markAllAsRead}
+        />
       )}
     </>
   );

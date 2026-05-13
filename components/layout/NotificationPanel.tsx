@@ -1,13 +1,16 @@
 "use client";
 
-import { useNotifications } from "@/lib/hooks/useNotifications";
-import { timeAgo, getNotificationIcon } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 import { Bell, CheckCheck, X, AlertTriangle, Package, PackagePlus, ShoppingCart, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Notificacao } from "@/lib/types";
 
 interface NotificationPanelProps {
   onClose: () => void;
+  notifications: Notificacao[];
+  unreadCount: number;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
 }
 
 function getNotifColor(tipo: string) {
@@ -32,8 +35,7 @@ function getNotifIcon(tipo: string) {
   return icons[tipo] || <Bell size={14} />;
 }
 
-export function NotificationPanel({ onClose }: NotificationPanelProps) {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+export function NotificationPanel({ onClose, notifications, unreadCount, markAsRead, markAllAsRead }: NotificationPanelProps) {
 
   return (
     <>

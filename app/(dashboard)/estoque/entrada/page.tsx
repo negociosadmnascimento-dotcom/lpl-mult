@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { PackagePlus, Search, Filter, Edit2, Trash2, X, Save, Calendar, User, Package, ChevronDown } from "lucide-react";
+import { PackagePlus, Search, Filter, Edit2, Trash2, X, Save, Calendar, User, Package, ChevronDown, Store, MapPin, Phone, FileText, DollarSign } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
 import { formatDate, cn } from "@/lib/utils";
@@ -16,6 +16,12 @@ type FormData = {
   data_entrada: string;
   responsavel: string;
   observacoes?: string;
+  custo_unitario?: number;
+  nota_fiscal?: string;
+  loja_nome?: string;
+  cidade?: string;
+  uf?: string;
+  contato?: string;
 };
 
 /* ---------- Autocomplete component ---------- */
@@ -197,6 +203,15 @@ export default function EntradaEstoquePage() {
       const resolvedId = await resolveOrCreateBrinde(brindeNome, brindeId);
       if (!resolvedId) { setSaving(false); return; }
 
+      const compraFields = {
+        custo_unitario: data.custo_unitario || null,
+        nota_fiscal: data.nota_fiscal || null,
+        loja_nome: data.loja_nome || null,
+        cidade: data.cidade || null,
+        uf: data.uf || null,
+        contato: data.contato || null,
+      };
+
       if (editing) {
         const diff = data.quantidade - editing.quantidade;
         const { error } = await supabase
@@ -207,6 +222,7 @@ export default function EntradaEstoquePage() {
             data_entrada: data.data_entrada,
             responsavel: data.responsavel,
             observacoes: data.observacoes || null,
+            ...compraFields,
           })
           .eq("id", editing.id);
         if (error) throw error;
@@ -222,6 +238,7 @@ export default function EntradaEstoquePage() {
           data_entrada: data.data_entrada,
           responsavel: data.responsavel,
           observacoes: data.observacoes || null,
+          ...compraFields,
         });
         if (error) throw error;
         toast.success("Entrada registrada com sucesso!");
@@ -256,6 +273,12 @@ export default function EntradaEstoquePage() {
     setValue("data_entrada", entrada.data_entrada);
     setValue("responsavel", entrada.responsavel);
     setValue("observacoes", entrada.observacoes || "");
+    setValue("custo_unitario", entrada.custo_unitario ?? undefined);
+    setValue("nota_fiscal", entrada.nota_fiscal || "");
+    setValue("loja_nome", entrada.loja_nome || "");
+    setValue("cidade", entrada.cidade || "");
+    setValue("uf", entrada.uf || "");
+    setValue("contato", entrada.contato || "");
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -396,6 +419,94 @@ export default function EntradaEstoquePage() {
                   rows={2}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all resize-none text-gray-900 dark:text-gray-100"
                   placeholder="Observações opcionais..."
+                />
+              </div>
+
+              {/* Divider Dados da Compra */}
+              <div className="md:col-span-2 lg:col-span-3">
+                <div className="flex items-center gap-2 py-1">
+                  <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
+                    <Store size={13} className="text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Dados da Compra</span>
+                  <div className="flex-1 h-px bg-gray-100 dark:bg-white/5" />
+                </div>
+              </div>
+
+              {/* Custo unitário */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <DollarSign size={13} /> Custo Unitário (R$)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  {...register("custo_unitario", { valueAsNumber: true })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-gray-900 dark:text-gray-100"
+                  placeholder="0,00"
+                />
+              </div>
+
+              {/* Nota fiscal */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <FileText size={13} /> Nota Fiscal
+                </label>
+                <input
+                  {...register("nota_fiscal")}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-gray-900 dark:text-gray-100"
+                  placeholder="NF-001234"
+                />
+              </div>
+
+              {/* Contato */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Phone size={13} /> Contato
+                </label>
+                <input
+                  {...register("contato")}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-gray-900 dark:text-gray-100"
+                  placeholder="Nome ou telefone"
+                />
+              </div>
+
+              {/* Loja */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Store size={13} /> Loja / Fornecedor
+                </label>
+                <input
+                  {...register("loja_nome")}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-gray-900 dark:text-gray-100"
+                  placeholder="Nome da loja ou fornecedor"
+                />
+              </div>
+
+              {/* Cidade */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <MapPin size={13} /> Cidade
+                </label>
+                <input
+                  {...register("cidade")}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-gray-900 dark:text-gray-100"
+                  placeholder="Cidade"
+                />
+              </div>
+
+              {/* UF */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <MapPin size={13} /> UF
+                </label>
+                <input
+                  {...register("uf")}
+                  maxLength={2}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0d0d2e] text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all text-gray-900 dark:text-gray-100 uppercase"
+                  placeholder="SP"
+                  style={{ textTransform: "uppercase" }}
                 />
               </div>
 

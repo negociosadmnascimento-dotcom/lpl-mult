@@ -20,6 +20,12 @@ export type EntradaEstoque = {
   responsavel: string;
   observacoes: string | null;
   imagem_url: string | null;
+  custo_unitario: number | null;
+  nota_fiscal: string | null;
+  loja_nome: string | null;
+  cidade: string | null;
+  uf: string | null;
+  contato: string | null;
   created_at: string;
   updated_at: string;
   brinde?: Brinde;
