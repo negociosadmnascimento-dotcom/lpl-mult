@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Eye, EyeOff, Lock, User, Zap } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Zap, Mail } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
 import toast from "react-hot-toast";
@@ -15,6 +14,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+
+  function handleForgotPassword() {
+    window.location.href = "mailto:adm@lplmult.com.br?subject=Recuperação de senha - LPL mult&body=Olá, preciso recuperar minha senha de acesso ao Sistema de Gestão de Brindes LPL mult.";
+    toast.success("Abrindo e-mail para adm@lplmult.com.br");
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -22,7 +27,7 @@ export default function LoginPage() {
 
     await new Promise((r) => setTimeout(r, 800));
 
-    if (username === "lplmult" && password === "lpl2025") {
+    if (username === "lplmult" && password === "Brinde.Lpl") {
       localStorage.setItem("lpl-auth", "true");
       toast.success("Bem-vindo ao LPL mult!");
       router.push("/dashboard");
@@ -131,6 +136,17 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors duration-200"
+              >
+                <Mail size={12} />
+                Esqueci minha senha
+              </button>
+            </div>
           </form>
 
           {/* Hint */}
@@ -143,7 +159,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-white/20 text-xs mt-6">
-          © 2025 LPL mult • Sistema de Gestão de Brindes
+          © 2026 Fluxo Brinde LPL Mult • Sistema de Gestão de Brindes
         </p>
       </div>
     </div>
