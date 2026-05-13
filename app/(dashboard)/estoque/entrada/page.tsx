@@ -150,19 +150,37 @@ export default function EntradaEstoquePage() {
     if (id) return id;
     if (!nome.trim()) return null;
 
-    // Check if a brinde with this name already exists (case-insensitive)
+    // 1. Check local state (active brindes already loaded)
     const existing = brindes.find((b) => b.nome.toLowerCase() === nome.trim().toLowerCase());
     if (existing) return existing.id;
 
-    // Create a new brinde
+    // 2. Search DB directly (handles inactive or just-created brindes)
+    const { data: dbExisting } = await supabase
+      .from("brindes")
+      .select("id")
+      .ilike("nome", nome.trim())
+      .maybeSingle();
+    if (dbExisting) return dbExisting.id;
+
+    // 3. Create new brinde
     const { data, error } = await supabase
       .from("brindes")
       .insert({ nome: nome.trim(), estoque_atual: 0, estoque_reservado: 0, estoque_minimo: 10, ativo: true })
-      .select()
+      .select("id")
       .single();
 
-    if (error || !data) {
-      toast.error("Erro ao criar brinde.");
+    if (error) {
+      // Unique constraint violation — brinde already exists, fetch it
+      if (error.code === "23505") {
+        const { data: conflict } = await supabase
+          .from("brindes")
+          .select("id")
+          .ilike("nome", nome.trim())
+          .maybeSingle();
+        if (conflict) return conflict.id;
+      }
+      console.error("Erro ao criar brinde:", error);
+      toast.error(`Erro ao criar brinde: ${error.message}`);
       return null;
     }
     return data.id;
@@ -189,7 +207,6 @@ export default function EntradaEstoquePage() {
             data_entrada: data.data_entrada,
             responsavel: data.responsavel,
             observacoes: data.observacoes || null,
-            updated_at: new Date().toISOString(),
           })
           .eq("id", editing.id);
         if (error) throw error;
