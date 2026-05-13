@@ -58,6 +58,11 @@ export default function NovoPedidoPage() {
       setCampanhas((campRes.data || []).map((c: { nome: string }) => c.nome));
     }
     load();
+    const channel = supabase
+      .channel("novo-pedido-brindes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "brindes" }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   async function onSubmit(data: FormData) {
