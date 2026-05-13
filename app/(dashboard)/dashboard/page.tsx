@@ -61,6 +61,8 @@ export default function DashboardPage() {
       .channel("dashboard-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "brindes" }, loadData)
       .on("postgres_changes", { event: "*", schema: "public", table: "pedidos" }, loadData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pedido_brindes" }, loadData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "entradas_estoque" }, loadData)
       .on("postgres_changes", { event: "*", schema: "public", table: "movimentacoes" }, loadData)
       .subscribe();
 
@@ -70,15 +72,17 @@ export default function DashboardPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [brindRes, pedRes, movRes] = await Promise.all([
+      const [brindRes, pedRes, movRes, pedCountRes] = await Promise.all([
         supabase.from("brindes").select("*").eq("ativo", true).order("nome"),
         supabase.from("pedidos").select("*, pedido_brindes(*)").order("created_at", { ascending: false }).limit(10),
         supabase.from("movimentacoes").select("*, brinde:brindes(nome)").order("created_at", { ascending: false }).limit(20),
+        supabase.from("pedidos").select("*", { count: "exact", head: true }),
       ]);
 
       const b = brindRes.data || [];
       const p = pedRes.data || [];
       const m = movRes.data || [];
+      const totalPedidosCount = pedCountRes.count ?? 0;
 
       setBrindes(b);
       setPedidos(p);
@@ -97,7 +101,7 @@ export default function DashboardPage() {
       setStats({
         totalEstoque,
         totalDistribuidos,
-        totalPedidos: p.length,
+        totalPedidos: totalPedidosCount,
         brindesReservados,
         alertasBaixo,
       });

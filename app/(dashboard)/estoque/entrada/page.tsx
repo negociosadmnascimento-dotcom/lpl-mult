@@ -578,7 +578,7 @@ export default function EntradaEstoquePage() {
                         </span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className="text-sm font-bold text-green-600 dark:text-green-400">+{entrada.quantidade}</span>
+                        <span className="text-sm font-bold text-green-600 dark:text-green-400">{entrada.quantidade}</span>
                       </td>
                       <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{formatDate(entrada.data_entrada)}</td>
                       <td className="px-5 py-3.5 text-sm text-gray-600 dark:text-gray-400">{entrada.responsavel}</td>

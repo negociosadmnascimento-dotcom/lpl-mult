@@ -37,6 +37,8 @@ export default function EstoquePage() {
     const channel = supabase
       .channel("estoque-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "brindes" }, loadData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pedido_brindes" }, loadData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "entradas_estoque" }, loadData)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
